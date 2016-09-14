@@ -11,6 +11,8 @@ var logger = new (winston.Logger)({
 
 logger.level = 'debug';
 
+var pg = require('pg');
+
 //Setting up the Twitter library
 var Twit = require('twit');
 var T = new Twit(require('./config.js'));
@@ -22,7 +24,8 @@ stream.on('tweet', onTweet);
 var globalTweetParams = {};
 var botSN = 'trekkerbot';
 
-var phraseBook = ['Engage.', 'Make it so.', 'Tea, Earl Grey, hot.', 'Space. The final frontier. These are the voyages of the starship Enterprise. It\'s continuing mission: to explore strange new worlds. To seek out new life and new civilizations. To boldly go where no one has gone before.'];
+pg.defaults.ssl = true;
+var dburl = process.env.DATABASE_URL;
 
 //catch tweets that the bot is tagged in
 function onTweet(tweet) {
@@ -33,8 +36,6 @@ function onTweet(tweet) {
         globalTweetParams.replyTweetId = tweet.id;
         logger.debug("Reply to tweet id: " + globalTweetParams.replyTweetId);
         logger.debug("In reply to screen name: " + tweet.in_reply_to_screen_name);
-    
-        logger.debug("We were tagged in the tweet! Tweet");
         tweetSomeTrek();
     }
 }
@@ -42,13 +43,34 @@ function onTweet(tweet) {
 //after the file upload, post the tweet
 function tweetSomeTrek() {
     logger.debug("Tweeting a quote...");
-    var phraseInd = Math.round(Math.random()*3);
-    logger.debug("The resulting index: " + phraseInd);
-    var params = {
-            status: '@' + globalTweetParams.replySN + ': ' + phraseBook[phraseInd],
-            in_reply_to_status_id: globalTweetParams.replyTweetId
-    };
-    T.post('statuses/update', params, handleTweetResponse);
+    var randPhrase = '';
+    pg.connect(dburl, function(err, client) {          
+        if (err) throw err;
+        
+        logger.debug('Connected to postgres! Getting schemas...');
+        
+        var formattedquery = 'SELECT phraseText FROM phrase ORDER BY RANDOM() LIMIT 1';
+        client.query(formattedquery, function(err, result) {
+            console.log("Insert command");
+            if(err) throw err;
+            
+            if(result.rows != null) {
+                logger.debug(result.rows);
+                randPhrase = result.rows[0].phrasetext;
+                logger.debug("randPhrase: " + randPhrase)
+                var params = {
+                        status: '@' + globalTweetParams.replySN + ': ' + randPhrase,
+                        in_reply_to_status_id: globalTweetParams.replyTweetId
+                };
+                T.post('statuses/update', params, handleTweetResponse);
+            }
+            
+            client.end(function (err) {
+                if (err) throw err;
+            })
+        });
+      });
+    
 }
 
 //handle response from tweet request
