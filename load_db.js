@@ -26,6 +26,7 @@ var lineReader = readline.createInterface({
 lineReader.on('line', processLine);
 
 pg.defaults.ssl = true;
+var pool = new pg.Pool(config);
 var dburl = process.env.DATABASE_URL;
 
 function processLine(line) {
@@ -40,7 +41,7 @@ function processLine(line) {
       return;
   }
   logger.debug("Line: " + line);
-  pg.connect(dburl, function(err, client) {          
+  pool.connect(dburl, function(err, client) {          
     if (err) throw err;
     logger.debug('Connected to postgres! Getting schemas...');
     line = line.replace(/'/g, '\'\'');
