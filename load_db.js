@@ -24,11 +24,19 @@ var lineReader = readline.createInterface({
 });
 
 lineReader.on('line', processLine);
+const url = require('url')
 
-pg.defaults.ssl = true;
+const params = url.parse(process.env.DATABASE_URL);
+const auth = params.auth.split(':');
+
+
 var pool_config = {
-    max: 10,  
-    idleTimeoutMillis: 30000  
+    user: auth[0],
+    password: auth[1],
+    host: params.hostname,
+    port: params.port,
+    database: params.pathname.split('/')[1],
+    ssl: true    
 };
 var pool = new pg.Pool(pool_config);
 var dburl = process.env.DATABASE_URL;
@@ -45,7 +53,7 @@ function processLine(line) {
       return;
   }
   logger.debug("Line: " + line);
-  pool.connect(dburl, function(err, client) {          
+  pool.connect(function(err, client, done) {          
     if (err) throw err;
     logger.debug('Connected to postgres! Getting schemas...');
     line = line.replace(/'/g, '\'\'');
@@ -56,10 +64,7 @@ function processLine(line) {
         console.log("Insert command");
         if(err) throw err;
         
-        
-        client.end(function (err) {
-            if (err) throw err;
-        })
+        done();
     });
   });
 }
