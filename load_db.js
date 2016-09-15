@@ -30,7 +30,7 @@ var dburl = process.env.DATABASE_URL;
 
 function processLine(line) {
   if(line.length > 120) {
-      difference = (param.length - 120); 
+      difference = (line.length - 120); 
   
       logger.error("Phrase: " + line);
       logger.error("Phrase was longer than 120 characters.");
