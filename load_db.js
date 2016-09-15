@@ -26,6 +26,10 @@ var lineReader = readline.createInterface({
 lineReader.on('line', processLine);
 
 pg.defaults.ssl = true;
+var pool_config = {
+    max: 10,  
+    idleTimeoutMillis: 30000  
+};
 var pool = new pg.Pool(config);
 var dburl = process.env.DATABASE_URL;
 
