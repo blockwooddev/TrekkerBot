@@ -36,7 +36,7 @@ function processLine(line) {
       logger.error("Phrase was longer than 120 characters.");
       logger.error("You are " + difference + " characters over.");
       
-      fs.appendFileSync(overflow_line, line + "; " + difference + "\n");
+      fs.appendFileSync(overflow_file, line + "; " + difference + "\n");
       return;
   }
   logger.debug("Line: " + line);
