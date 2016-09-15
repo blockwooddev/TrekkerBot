@@ -30,7 +30,7 @@ var pool_config = {
     max: 10,  
     idleTimeoutMillis: 30000  
 };
-var pool = new pg.Pool(config);
+var pool = new pg.Pool(pool_config);
 var dburl = process.env.DATABASE_URL;
 
 function processLine(line) {
