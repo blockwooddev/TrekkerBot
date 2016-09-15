@@ -15,6 +15,8 @@ var pg = require('pg');
 var fs = require('fs');
 var readline = require('readline');
 var filename = './phrases.csv';
+var overflow_file = './overflow.csv';
+var difference; //allocating here so it's not reallocated every time
 var inputStream = fs.createReadStream(filename);
 
 var lineReader = readline.createInterface({
@@ -27,15 +29,24 @@ pg.defaults.ssl = true;
 var dburl = process.env.DATABASE_URL;
 
 function processLine(line) {
-  if(line.length > 120) return;
+  if(line.length > 120) {
+      difference = (param.length - 120); 
+  
+      logger.error("Phrase: " + line);
+      logger.error("Phrase was longer than 120 characters.");
+      logger.error("You are " + difference + " characters over.");
+      
+      fs.appendFileSync(overflow_line, line + "; " + difference + "\n");
+      return;
+  }
   logger.debug("Line: " + line);
-  logger.debug("Database URL: " + dburl);
   pg.connect(dburl, function(err, client) {          
     if (err) throw err;
     logger.debug('Connected to postgres! Getting schemas...');
     line = line.replace(/'/g, '\'\'');
     var formattedquery = 'INSERT INTO phrase(phraseText) VALUES(\'' + line + '\')';
-
+    
+    logger.debug(formattedquery);
     client.query(formattedquery, function(err) {
         console.log("Insert command");
         if(err) throw err;
