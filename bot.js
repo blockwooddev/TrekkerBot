@@ -15,7 +15,7 @@ var pg = require('pg');
 
 //Setting up the Twitter library
 var Twit = require('twit');
-var T = new Twit(require('./config.js'));
+var T = new Twit(require('./twit-config.js'));
 
 //Start a stream to get tweets
 var stream = T.stream('user');
