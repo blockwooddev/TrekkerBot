@@ -17,7 +17,6 @@ var readline = require('readline');
 var url = require('url');
 var overflow_file = './overflow.csv';
 var difference; //allocating here so it's not reallocated every time
-var inputStream = fs.createReadStream(filename);
 const params = url.parse(process.env.DATABASE_URL);
 const auth = params.auth.split(':');
 var filename;
@@ -26,12 +25,9 @@ if(process.argv.length < 3) {
     logger.error("Too few command line arguments! Must include filename of phrase to add to db.");
     process.exit(1);
 } else {
-    filename = process.argv[2];    
+    filename = process.argv[2];
 }
-
-
-
-
+var inputStream = fs.createReadStream(filename);
 
 var pool_config = {
     user: auth[0],
