@@ -27,6 +27,11 @@ var botSN = 'trekkerbot';
 pg.defaults.ssl = true;
 var dburl = process.env.DATABASE_URL;
 
+//simple defense against endless convos w/ bots
+var last_sn = '';
+var back_and_forth_count = 1;
+var MAX_BNF = 10;
+
 //catch tweets that the bot is tagged in
 function onTweet(tweet) {
     logger.debug("Got a tweet: " + JSON.stringify(tweet));
@@ -36,6 +41,21 @@ function onTweet(tweet) {
         globalTweetParams.replyTweetId = tweet.id;
         logger.debug("Reply to tweet id: " + globalTweetParams.replyTweetId);
         logger.debug("In reply to screen name: " + tweet.in_reply_to_screen_name);
+        
+        if(globalTweetParams.replySN == last_sn) {
+            if(back_and_forth_count <= MAX_BNF) {
+                logger.debug("" + back_and_forth_count + " tweets in a row to " + last_sn);
+                back_and_forth_count++;
+            } else {
+                back_and_forth_count++; //for record-keeping
+                logger.debug("Tweets in a row to " + last_sn + " exceeded threshold. Total: " + back_and_forth_count);
+                return;
+            }
+        } else {
+            back_and_forth_count = 1;
+            last_sn = globalTweetParams.replySN;
+        }
+        
         tweetSomeTrek();
     }
 }
