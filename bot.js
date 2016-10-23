@@ -24,8 +24,18 @@ stream.on('tweet', onTweet);
 var globalTweetParams = {};
 var botSN = 'trekkerbot';
 
-pg.defaults.ssl = true;
-var dburl = process.env.DATABASE_URL;
+const params = url.parse(process.env.DATABASE_URL);
+const auth = params.auth.split(':');
+var pool_config = {
+        user: auth[0],
+        password: auth[1],
+        host: params.hostname,
+        port: params.port,
+        database: params.pathname.split('/')[1],
+        ssl: true    
+    };
+var pool = new pg.Pool(pool_config);
+
 
 //simple defense against endless convos w/ bots
 var last_sn = '';
@@ -64,14 +74,14 @@ function onTweet(tweet) {
 function tweetSomeTrek() {
     logger.debug("Tweeting a quote...");
     var randPhrase = '';
-    pg.connect(dburl, function(err, client) {          
+    
+    pool.connect(function(err, client, done) {          
         if (err) throw err;
         
         logger.debug('Connected to postgres! Getting schemas...');
         
-        var formattedquery = 'SELECT phraseText FROM phrase ORDER BY RANDOM() LIMIT 1';
+        var formattedquery = 'SELECT phraseText FROM phrase ORDER BY RANDOM() LIMIT 1;';
         client.query(formattedquery, function(err, result) {
-            console.log("Insert command");
             if(err) throw err;
             
             if(result.rows != null) {
@@ -85,9 +95,7 @@ function tweetSomeTrek() {
                 T.post('statuses/update', params, handleTweetResponse);
             }
             
-            client.end(function (err) {
-                if (err) throw err;
-            })
+            done();
         });
       });
     
