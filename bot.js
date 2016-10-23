@@ -12,6 +12,7 @@ var logger = new (winston.Logger)({
 logger.level = 'debug';
 
 var pg = require('pg');
+var url = require('url');
 
 //Setting up the Twitter library
 var Twit = require('twit');
